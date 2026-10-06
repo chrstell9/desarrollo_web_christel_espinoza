@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle de Avistamiento - {{ avistamiento.ave.nombre }}{% endblock %}
+
+{% block content %}
+<section class="detalle-container">
+    <h2>Detalle del Avistamiento #{{ avistamiento.id }}</h2>
+
+    <div class="info-avistamiento">
+        <p><strong>Ave:</strong> {{ avistamiento.ave.nombre }}</p>
+        <p><strong>Observador:</strong> {{ avistamiento.voluntario.nombre }} ({{ avistamiento.voluntario.email }})</p>
+        <p><strong>Lugar:</strong> {{ avistamiento.lugar }}</p>
+        <p><strong>Comuna:</strong> {{ avistamiento.voluntario.comuna.nombre }}</p>
+        <p><strong>Región:</strong> {{ avistamiento.voluntario.comuna.region.nombre }}</p>
+        <p><strong>Fecha y Hora:</strong> {{ avistamiento.fecha_hora.strftime('%d/%m/%Y a las %H:%M') }}</p>
+        <p><strong>Descripción:</strong> {{ avistamiento.descripcion or 'Sin descripción proporcionada.' }}</p>
+    </div>
+
+    <h3>Archivos Adjuntos</h3>
+    <div class="galeria-multimedia">
+        {% if avistamiento.registros %}
+        {% for reg in avistamiento.registros %}
+        <div class="item-multimedia">
+            {% if reg.nombre_archivo.lower().endswith(('.mp4', '.mov', '.avi', '.mkv')) %}
+            <video controls width="400">
+                <source src="{{ url_for('static', filename=reg.ruta_archivo) }}">
+                Tu navegador no soporta reproducción de video.
+            </video>
+            {% else %}
+            <img src="{{ url_for('static', filename=reg.ruta_archivo) }}" alt="Foto de {{ avistamiento.ave.nombre }}" width="350">
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% else %}
+        <p>Este avistamiento no cuenta con archivos adjuntos.</p>
+        {% endif %}
+    </div>
+
+    <br>
+    <a href="{{ url_for('listado_avistamientos') }}" class="btn-volver">← Volver al listado</a>
+</section>
+{% endblock %}

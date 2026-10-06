@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Informar Avistamiento - Avistamiento de Aves{% endblock %}
+
+{% block content %}
+<section class="formulario-container">
+    <h2>Informar Avistamiento de Ave</h2>
+
+    <form action="{{ url_for('agregar_avistamiento') }}" method="POST" enctype="multipart/form-data" id="form-avistamiento">
+        <div class="campo">
+            <label for="voluntario_id">Voluntario / Observador (*):</label>
+            <select id="voluntario_id" name="voluntario_id" required>
+                <option value="">-- Seleccione un voluntario --</option>
+                {% for v in voluntarios %}
+                <option value="{{ v.id }}">{{ v.nombre }} ({{ v.email }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="campo">
+            <label for="ave_id">Ave Avistada (*):</label>
+            <select id="ave_id" name="ave_id" required>
+                <option value="">-- Seleccione el ave --</option>
+                {% for a in aves %}
+                <option value="{{ a.id }}">{{ a.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="campo">
+            <label for="fecha_hora">Fecha y Hora del Avistamiento (*):</label>
+            <input type="datetime-local" id="fecha_hora" name="fecha_hora" required>
+        </div>
+
+        <div class="campo">
+            <label for="lugar">Lugar / Ubicación (*):</label>
+            <input type="text" id="lugar" name="lugar" placeholder="Ej: Parque Metropolitano, Sector Antenas" required maxlength="200">
+        </div>
+
+        <div class="campo">
+            <label for="descripcion">Descripción / Notas de campo:</label>
+            <textarea id="descripcion" name="descripcion" rows="4" maxlength="500"></textarea>
+        </div>
+
+        <div class="campo">
+            <label for="archivos">Fotos o Videos del Avistamiento (Máx 5 archivos):</label>
+            <input type="file" id="archivos" name="archivos" multiple accept="image/*,video/*">
+        </div>
+
+        <button type="submit">Guardar Avistamiento</button>
+    </form>
+</section>
+{% endblock %}

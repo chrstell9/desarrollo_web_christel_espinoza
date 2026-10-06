@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar Voluntario - Avistamiento de Aves{% endblock %}
+
+{% block content %}
+<section class="formulario-container">
+    <h2>Registrar Nuevo Voluntario</h2>
+
+    <form action="{{ url_for('registrar_voluntario') }}" method="POST" id="form-voluntario">
+        <div class="campo">
+            <label for="nombre">Nombre completo (*):</label>
+            <input type="text" id="nombre" name="nombre" value="{{ datos.get('nombre', '') }}" required minlength="3" maxlength="255">
+        </div>
+
+        <div class="campo">
+            <label for="email">Correo electrónico (*):</label>
+            <input type="email" id="email" name="email" value="{{ datos.get('email', '') }}" required maxlength="80">
+        </div>
+
+        <div class="campo">
+            <label for="telefono">Teléfono cel / red fija:</label>
+            <input type="text" id="telefono" name="telefono" value="{{ datos.get('telefono', '') }}" placeholder="+56912345678" maxlength="15">
+        </div>
+
+        <div class="campo">
+            <label for="region_id">Región (*):</label>
+            <select id="region_id" name="region_id" required>
+                <option value="">-- Seleccione una región --</option>
+                {% for r in regiones %}
+                <option value="{{ r.id }}">{{ r.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="campo">
+            <label for="comuna_id">Comuna (*):</label>
+            <select id="comuna_id" name="comuna_id" required disabled>
+                <option value="">-- Primero seleccione una región --</option>
+            </select>
+        </div>
+
+        <button type="submit">Registrar Voluntario</button>
+    </form>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Script JavaScript para cargar comunas dinámicamente según la región elegida
+    document.getElementById('region_id').addEventListener('change', function() {
+        const regionId = this.value;
+        const comunaSelect = document.getElementById('comuna_id');
+
+        comunaSelect.innerHTML = '<option value="">-- Seleccione una comuna --</option>';
+
+        if (regionId) {
+            fetch(`/api/comunas/${regionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(comuna => {
+                        const option = document.createElement('option');
+                        option.value = comuna.id;
+                        option.textContent = comuna.nombre;
+                        comunaSelect.appendChild(option);
+                    });
+                    comunaSelect.disabled = false;
+                })
+                .catch(error => console.error('Error al cargar comunas:', error));
+        } else {
+            comunaSelect.disabled = true;
+        }
+    });
+</script>
+{% endblock %}

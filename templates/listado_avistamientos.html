@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Listado de Avistamientos - Avistamiento de Aves{% endblock %}
+
+{% block content %}
+<section class="listado-container">
+    <h2>Listado Completo de Avistamientos</h2>
+
+    {% if avistamientos %}
+    <table class="tabla-avistamientos">
+        <thead>
+        <tr>
+            <th>Fecha y Hora</th>
+            <th>Ave</th>
+            <th>Lugar</th>
+            <th>Observador</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for a in avistamientos %}
+        <tr>
+            <td>{{ a.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td><strong>{{ a.ave.nombre }}</strong></td>
+            <td>{{ a.lugar }}</td>
+            <td>{{ a.voluntario.nombre }}</td>
+            <td>
+                <a href="{{ url_for('detalle_avistamiento', id=a.id) }}">Ver Detalle</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No hay avistamientos registrados en el sistema.</p>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio - Avistamiento de Aves{% endblock %}
+
+{% block content %}
+<section class="bienvenida">
+    <h1>Bienvenido al Portal de Avistamiento de Aves</h1>
+    <p>Registra tus avistamientos y apoya la conservación del patrimonio natural.</p>
+</section>
+
+<section class="ultimos-avistamientos">
+    <h2>Últimos Avistamientos Registrados</h2>
+
+    {% if avistamientos %}
+    <div class="tarjetas-container">
+        {% for a in avistamientos %}
+        <div class="tarjeta-avistamiento">
+            <h3>{{ a.ave.nombre }}</h3>
+            <p><strong>Lugar:</strong> {{ a.lugar }}</p>
+            <p><strong>Fecha y Hora:</strong> {{ a.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</p>
+            <p><strong>Observador:</strong> {{ a.voluntario.nombre }}</p>
+            {% if a.registros %}
+            <img src="{{ url_for('static', filename=a.registros[0].ruta_archivo) }}" alt="Foto de {{ a.ave.nombre }}" width="200">
+            {% endif %}
+            <br>
+            <a href="{{ url_for('detalle_avistamiento', id=a.id) }}">Ver detalle</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>Aún no hay avistamientos registrados en el sistema.</p>
+    {% endif %}
+</section>
+{% endblock %}
