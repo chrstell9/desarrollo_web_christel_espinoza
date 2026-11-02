@@ -36,7 +36,110 @@
         {% endif %}
     </div>
 
+    <!-- T3: sección de comentarios y formulario -->
+    <hr style="margin: 30px 0;">
+    <h3>Comentarios</h3>
+
+    <!-- listado donde se cargarán los comentarios vía AJAX/fetch -->
+    <div id="lista-comentarios">
+        <p>Cargando comentarios...</p>
+    </div>
+
+    <h4 style="margin-top: 25px;">Agregar un comentario</h4>
+
+    <!-- formulario con reglas y validaciones solicitadas -->
+    <form id="form-comentario">
+        <div style="margin-bottom: 15px;">
+            <label for="nombre"><strong> Nombre del Comentarista:</strong></label>
+            <input type="text" id="nombre" name="nombre" minlength="3" maxlength="50" required style="width: 100%; max-width: 350px; padding: 6px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label for="texto"><strong> Comentario:</strong></label>
+            <textarea id="texto" name="texto" rows="3" cols="40" minlength="5" maxlength="500" required style="width: 100%; max-width: 450px; padding: 6px;"></textarea>
+        </div>
+
+        <div id="mensaje-error" style="color: red; margin-bottom: 12px; font-weight: bold;"></div>
+
+        <button type="submit" class="btn">Agregar Comentario</button>
+    </form>
+
     <br>
     <a href="{{ url_for('listado_avistamientos') }}" class="btn-volver">← Volver al listado</a>
 </section>
+
+<!-- SCRIPT JAVASCRIPT (AJAX con fetch) -->
+<script type="text/javascript">
+    const avistamientoId = {{ avistamiento.id }};
+
+    // obtiene los comentarios desde el servidr Flask de manera asíncrona
+    function cargarComentarios() {
+        fetch(`/api/avistamiento/${avistamientoId}/comentarios`)
+            .then(response => response.json())
+            .then(comentarios => {
+                const contenedor = document.getElementById('lista-comentarios');
+                if (comentarios.length === 0) {
+                    contenedor.innerHTML = '<p><em>No hay comentarios registrados para este avistamiento</em></p>';
+                    return;
+                }
+
+                let html = '<ul style="list-style-type: none; paddin-left: 0;">';
+                comentarios.forEach(c => {
+                    html += `
+                        <li style="background: #f4f4f4; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
+                        <strong>${c.nombre}</strong> <small style="color: #666;">(${c.fecha})</small><br>
+                        <span style="display: inline-block; margin-top: 5px;">${c.texto}</span>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+                contenedor.innerHTML = html
+            });
+    }
+
+    // cargar los comentarios apenas se termine de cargar el HTML
+    document.addEventListener("DOMContentLoaded", cargarComentarios);
+
+    // manejar el submit del formulario sin reargar la página
+    document.getElementById('form-comentario').addEventListener('submit', function(e) {
+        e.preventDefault(); // Detiene el submit tradicional de HTML
+
+        const nombre = document.getElementById('nombre').value.trim();
+        const texto = document.getElementById('texto').value.trim();
+        const mensajeError = document.getElementById('mensaje-error');
+        mensajeError.innerText = '';
+
+        // validaciones en cliente
+        if (nombre.length < 3 || nombre.length > 50) {
+            mensajeError.innerText = 'El nombre debe tener entre 3 y 50 caracteres.';
+            return;
+        }
+        if (texto.length < 5) {
+            mensajeError.innerText = 'El comentario debe tener al menos 5 caracteres.';
+            return;
+        }
+
+        // peticion POST asíncrona
+        fetch(`/api/avistamiento/${avistamientoId}/comentarios`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre: nombre, texto: texto })
+        })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(res => {
+                if (res.status === 200 && res.body.success) {
+                    // Se limpia la caja de texto y se recarga la lista de comentarios
+                    document.getElementById('nombre').value = '';
+                    document.getElementById('texto').value = '';
+                    cargarComentarios();
+                } else {
+                    // Muestra el mensaje de error manteniendo visible el formulario
+                    mensajeError.innerText = res.body.errores ? res.body.errores.join(' ') : 'Error al guardar comentario.';
+                }
+            })
+            .catch(err => {
+                mensajeError.innerText = 'Ocurrió un error en la comunicación con el servidor.';
+            });
+    });
+</script>
 {% endblock %}
