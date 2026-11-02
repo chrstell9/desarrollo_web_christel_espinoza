@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas del Sistema</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}">
+
+    <!-- Librería Highcharts (ejemplo de lo visto) -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Estadísticas de Avistamientos y Voluntarios</h1>
+
+        <!-- Contenedores para los 3 gráficos -->
+        <div id="grafico-lineas" style ="width:100%; height:400px; margin-bottom: 40px;"></div>
+        <div id="grafico-torta" style="width:100%; height:400px; margin-bottom: 40px;"></div>
+        <div id="grafico-barras" style="width:100%; height:400px; margin-bottom: 40px;"></div>
+
+        <!-- Enlace para volver a la Portada -->
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="{{ url_for('index') }}" class="btn">Volver a la Portada</a>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function(){
+
+        // GRÁFICOS DE LÍNEA: Avistamientos por Día
+        fetch('/datos-avistamientos-dia')
+            .then(response => response.json())
+            .then(data => {
+                const dias = data.map(d => d.dia);
+                const cantidades = data.map(d => d.cantidad);
+
+                Highcharts.chart('grafico-lineas', {
+                    chart: { type: 'line' },
+                    title: { text:'Cantidad de Avistamientos por Día' },
+                    xAxis: { categories: dias, title: { text: 'Dia' } },
+                    yAxis: { title: { text: 'Cantidad' }, allowDecimals: false },
+                    series: [{ name: 'Avistamientos', data: cantidades }]
+                });
+            });
+
+        // GRÁFICO DE TORTA: Total de Avistamientos por Tipo de Ave
+        fetch('/datos-avistamientos-ave')
+            .then(response => response.json())
+            .then(data => {
+                const dataTorta = data.map(d => ({ name: d.ave, y:d.cantidad }));
+
+                Highcharts.chart('grafico-torta', {
+                    chart: { type: 'pie' },
+                    title: { text:'Total de Avistaientos por Tipo de Ave' },
+                    series: [{ name: 'Avistamientos', data: dataTorta }]
+                });
+            });
+
+        // GRÁFICO DE BARRAS: Voluntarios Registrados por Comuna
+        fetch('/datos-voluntarios-comuna')
+            .then(response => response.json())
+            .then(data => {
+                const comunas = data.map(d => d.comuna);
+                const cantidades = data.map(d => d.cantidad);
+
+                Highcharts.chart('grafico-barras', {
+                    chart: { type: 'column' },
+                    title: { text: 'Total de Voluntarios Registrados por Comuna' },
+                    xAxis: { categories: comunas, title: { text: 'Comuna' } },
+                    yAxis: { title: { text: 'Voluntarios' }, allowDecimals: false },
+                    series: [{ name: 'Voluntarios', data: cantidades }]
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

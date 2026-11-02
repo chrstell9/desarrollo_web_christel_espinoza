@@ -60,3 +60,32 @@ class Registro(db.Model):
     ruta_archivo = db.Column(db.String(300), nullable=False)
     nombre_archivo = db.Column(db.String(300), nullable=False)
     avistamiento_id = db.Column(db.Integer, db.ForeignKey('avistamiento.id'), nullable=False)
+
+
+# Funciones para Estadísticas: consultas que agrupen datos para los 3 gráficos
+def get_stats_avistamientos_por_dia():
+    """
+    Obtiene la cantidad de avistamientos agrupados por fecha (día).
+    El DATE_FORMAT extrae solo el día.
+    """
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    sql = """
+        SELECT DATE_FORMAT(fecha, '%Y-%m-%d') as dia, COUNT(*) as cantidad
+        FROM avistamiento 
+        GROUP BY dia
+        ORDER BY dia ASC
+    """
+    cursor.execute(sql)
+    resultado = cursor.fetchall()
+    cursor.close()
+    return resultado
+
+# Tarea 3: ya que se utiliza SQLAlchemy, se debe tener la clase de Comentario
+class Comentario(db.Model):
+    __tablename__ = 'comentario'
+    id = db.Column(db.Integer, primary_key=True)
+    avistamiento_id = db.Column(db.Integer, db.ForeignKey('avistamiento.id'), nullable=False)
+    nombre = db.Column(db.String(50), nullable=False)
+    texto = db.Column(db.Text, nullable=False)
+    fecha = db.Column(db.DateTime, default=datetime.now)

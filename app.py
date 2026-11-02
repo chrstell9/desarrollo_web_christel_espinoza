@@ -1,11 +1,12 @@
 #Archivo de inicio Flask
 import os
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, make_response
 from werkzeug.utils import secure_filename
 
 from config import Config
-from database import db, Region, Comuna, Voluntario, Ave, Avistamiento, Registro
+#funciones con la base de datos
+from database import db, Region, Comuna, Voluntario, Ave, Avistamiento, Registro, Comentario
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -118,6 +119,107 @@ def detalle_avistamiento(id):
 def obtener_comunas(region_id):
     comunas = Comuna.query.filter_by(region_id=region_id).all()
     return jsonify([{'id': c.id, 'nombre': c.nombre} for c in comunas])
+
+#TAREA 3: rutas para estadísticas y comentarios
+#7. Vista HTML para la pantalla de Estadísticas
+@app.route('/estadisticas')
+def estadisticas():
+    return render_template('estadisticas.html')
+
+# --- ENDPOINTS SON PARA LOS 3 GRÁFICOS (AJAX / fetch) ---
+@app.route('/datos-avistamientos-dia', methods=['GET'])
+def datos_avistamientos_dia():
+    # GRÁFICO 1: Líneas (Avistamientos por día)
+    # Agrupa por la fecha de fecha_hora y cuenta el total por día
+    resultados = db.session.query(
+        db.func.date_format(Avistamiento.fecha_hora, '%Y-%m-%d').label('dia'),
+        db.func.count(Avistamiento.id).label('cantidad')
+    ).group_by('dia').order_by('dia').all()
+
+    datos = [{'dia': r.dia, 'cantidad': r.cantidad} for r in resultados]
+
+    resp = make_response(jsonify(datos))
+    resp.headers["Content-type"] = "application/json;charset=UTF-8"
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+@app.route('/datos-avistamientos-ave', methods=['GET'])
+def datos_avistamientos_ave():
+    # GRÁFICO 2: Torta (Avistamientos por tipo/nombre de ave)
+    resultados = db.session.query(
+        Ave.nombre.label('ave'),
+        db.func.count(Avistamiento.id).label('cantidad')
+    ).join(Avistamiento, Ave.id == Avistamiento.ave_id) \
+        .group_by(Ave.nombre).all()
+
+    datos = [{'ave': r.ave, 'cantidad': r.cantidad} for r in resultados]
+
+    resp = make_response(jsonify(datos))
+    resp.headers["Content-type"] = "application/json;charset=UTF-8"
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+@app.route('/datos-voluntarios-comuna', methods=['GET'])
+def datos_voluntarios_comuna():
+    # Gráfico 3: Barras (Voluntarios por comuna)
+    resultados = db.session.query(
+        Comuna.nombre.label('comuna'),
+        db.func.count(Voluntario.id).label('cantidad')
+    ).join(Voluntario, Comuna.id == Voluntario.comuna_id) \
+        .group_by(Comuna.nombre).all()
+
+    datos = [{'comuna': r.comuna, 'cantidad': r.cantidad} for r in resultados]
+
+    resp = make_response(jsonify(datos))
+    resp.headers["Content-type"] = "application/json;charset=UTF-8"
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+# --- ENDPOINTS AJAX PARA COMENTARIOS ---
+@app.route('/api/avistamiento/<int:id>/comentarios', methods=['GET'])
+def obtener_comentarios(id):
+    # Obtener comentarios de un avistamiento del más reciente al más antiguo
+    comentarios = Comentario.query.filter_by(avistamiento_id=id) \
+        .order_by(Comentario.fecha.desc()).all()
+
+    datos = [{
+        'nombre': c.nombre,
+        'texto': c.texto,
+        'fecha': c.fecha.strftime('%d-%m-%Y %H:%M')
+    } for c in comentarios]
+
+    resp = make_response(jsonify(datos))
+    resp.headers["Content-type"] = "application/json;charset=UTF-8"
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+@app.route('/api/avistamiento/<int:id>/comentarios', methods=['POST'])
+def agregar_comentario(id):
+    data = request.get_json() or request.form
+    nombre = data.get('nombre', '').strip()
+    texto = data.get('texto', '').strip()
+
+    # Validaciones del lado del servidor (exigidas por enunciado)
+    errores = []
+    if not nombre or len(nombre) < 3 or len(nombre) > 50:
+        errores.append("El nombre es obligatorio y debe tener entre 3 y 50 caracteres.")
+    if not texto or len(texto) < 5:
+        errores.append("El comentario es obligatorio y debe tener al menos 5 caracteres.")
+
+    if errores:
+        return jsonify({'success': False, 'errores': errores}), 400
+
+    # Crear el objeto Comentario usando SQLAlchemy
+    nuevo_comentario = Comentario(
+        avistamiento_id=id,
+        nombre=nombre,
+        texto=texto,
+        fecha=datetime.now()
+    )
+    db.session.add(nuevo_comentario)
+    db.session.commit()
+
+    return jsonify({'success': True, 'mensaje': 'Comentario agregado con éxito.'})
 
 if __name__ == '__main__':
     app.run(debug=True)
