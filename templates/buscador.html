@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Avistamientos - Tarea 4</title>
+    <link rel="stylesheet" href="/css/buscador.css">
+</head>
+<body>
+<header>
+    <h1>Buscador y Evaluación de Avistamientos</h1>
+    <p>CC5002 - Desarrollo de Aplicaciones Web</p>
+</header>
+
+<main>
+    <section class="tarjeta" aria-label="Formulario de búsqueda">
+        <form id="form-buscador" class="grupo-busqueda">
+            <label for="campo-busqueda">Buscar por ave, voluntario o comuna:</label>
+            <input type="text" id="campo-busqueda" name="q" placeholder="Escribe para buscar en tiempo real..." autocomplete="off">
+        </form>
+    </section>
+
+    <section class="tarjeta" aria-label="Resultados de búsqueda">
+        <div id="mensaje-inicial" class="mensaje-estado">
+            Escribe en el buscador para consultar los avistamientos registrados.
+        </div>
+
+        <div id="mensaje-sin-resultados" class="mensaje-estado oculto">
+            No se encontraron avistamientos que coincidan con tu búsqueda.
+        </div>
+
+        <div id="contenedor-tabla" class="contenedor-tabla oculto">
+            <table id="tabla-resultados">
+                <thead>
+                <tr>
+                    <th>Día</th>
+                    <th>Comuna</th>
+                    <th>Ave</th>
+                    <th>Voluntario</th>
+                    <th>Nota</th>
+                    <th>Acción</th>
+                </tr>
+                </thead>
+                <tbody id="cuerpo-tabla">
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<!-- Modal para seleccionar nota entre 1 y 7 -->
+<div id="modal-evaluacion" class="modal-fondo oculto" role="dialog" aria-modal="true" aria-labelledby="titulo-modal">
+    <div class="modal-caja">
+        <h2 id="titulo-modal">Evaluar Avistamiento</h2>
+        <p id="detalle-avistamiento-modal">Selecciona una nota entre 1 y 7.</p>
+
+        <div id="error-modal" class="mensaje-error oculto"></div>
+
+        <label for="select-nota">Nota (1 a 7):</label>
+        <select id="select-nota">
+            <option value="">-- Selecciona una nota --</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+        </select>
+
+        <div class="modal-acciones">
+            <button type="button" id="btn-cancelar-nota" class="btn-cancelar">Cancelar</button>
+            <button type="button" id="btn-guardar-nota" class="btn-evaluar">Guardar Nota</button>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>Sistema de Avistamientos de Aves - Tarea 4</p>
+</footer>
+
+<script src="/js/buscador.js"></script>
+</body>
+</html>
