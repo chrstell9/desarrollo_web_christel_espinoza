@@ -67,4 +67,31 @@ Dentro de la vista de detalle de un avistamiento (`/avistamiento/<id>`):
     ```
    
 3. **Ingresar al link que se encuentra en la terminal**
-   
+
+
+# Tarea 4 - Buscador y Evaluación de Avistamientos
+
+Para esta tarea migré la funcionalidad de búsqueda y evaluación de avistamientos a **Java 17 con Spring Boot (v3.3.5)** y **Spring Data JPA**, manteniendo la base de datos `tarea2` en MySQL que venía trabajando de entregas anteriores.
+
+## Decisiones de implementación y arquitectura
+
+1. **Separación entre vista y API REST:**
+    - Creé `VistaController` para servir la interfaz principal en las rutas `/` y `/buscador` usando la plantilla `templates/buscador.html` (renombrando el `index.html` anterior a `index_tarea3.html` para conservarlo sin que interfiera con la portada).
+    - Implementé `AvistamientoApiController` (`@RestController`) con dos endpoints JSON bajo `/api/avistamientos`:
+        - `GET /api/avistamientos/buscar?q=...`: busca coincidencias parciales (sin importar mayúsculas o minúsculas) por nombre de ave, nombre de voluntario o nombre de comuna, ordenado desde el avistamiento más reciente.
+        - `POST /api/avistamientos/{id}/evaluar`: recibe una nota entera entre 1 y 7, la guarda en la tabla `nota` y devuelve el promedio actualizado redondeado a un decimal.
+
+2. **Alineación con el esquema real de MySQL (`tarea2`):**
+    - Al mapear las entidades JPA (`Avistamiento`, `Ave`, `Comuna`, `Voluntario`, `Nota`), ajusté las relaciones según las columnas reales de la base de datos: la fecha en `avistamiento` corresponde a `fecha_hora` y la llave foránea `comuna_id` está asociada directamente a `voluntario`. Por eso las consultas JPQL hacen `JOIN` desde `avistamiento` hacia `voluntario` y luego hacia `comuna`.
+    
+
+3. **Interfaz asíncrona sin recargar la página:**
+    - La vista `buscador.html` tiene un único campo de texto (`<input type="text">`) que escucha el evento `input` en `static/js/buscador.js`.
+    - Cuando llegan resultados desde `fetch`, se construye la tabla dinámicamente y se resaltan con `<mark>` las letras que coinciden con lo escrito, escapando caracteres especiales para evitar inyección de HTML. Si no hay coincidencias, se oculta la tabla y se muestra un aviso.
+    - Al hacer clic en **Evaluar**, se abre un modal con opciones enteras del `1` al `7`. Se valida tanto en el navegador como en el servidor que la nota sea un entero válido en ese rango, y al guardar se actualiza solo el cuadro del promedio de esa fila en tiempo real.
+
+## Cómo ejecutar el proyecto
+
+1. Tener MySQL corriendo con la base de datos `tarea2` y haber ejecutado el script `sql/tabla-nota.sql`.
+2. Configurar usuario y contraseña de MySQL en `src/main/resources/application.properties`.
+3. Ejecutar la clase principal `Tarea4Application.java` y abrir `http://localhost:8080/buscador` en el navegador.
